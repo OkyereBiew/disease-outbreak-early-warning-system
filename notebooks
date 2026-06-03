@@ -4,7 +4,7 @@
   "metadata": {
     "colab": {
       "provenance": [],
-      "authorship_tag": "ABX9TyO8RGo7vNzJNGpcJ5LjG/Xm",
+      "authorship_tag": "ABX9TyOdcYdt/cQoLZi4+Wq6n7xo",
       "include_colab_link": true
     },
     "kernelspec": {
@@ -27,13 +27,877 @@
       ]
     },
     {
-      "cell_type": "code",
-      "execution_count": null,
+      "cell_type": "markdown",
+      "source": [
+        "# Disease Outbreak Early Warning System\n",
+        "\n",
+        "## Notebook 01: Data Collection and Integration\n",
+        "\n",
+        "### Purpose\n",
+        "\n",
+        "The objective of this notebook is to collect, inspect, and integrate dengue surveillance data for subsequent time series analysis and outbreak forecasting.\n",
+        "\n",
+        "### Tasks\n",
+        "\n",
+        "* Load dengue feature data\n",
+        "* Load dengue case count data\n",
+        "* Merge surveillance and environmental datasets\n",
+        "* Inspect data quality\n",
+        "* Assess missing values\n",
+        "* Prepare the dataset for exploratory analysis\n",
+        "\n",
+        "### Expected Outcome\n",
+        "\n",
+        "A unified dengue surveillance dataset containing epidemiological and environmental variables that can be used for outbreak detection and forecasting.\n",
+        "\n"
+      ],
       "metadata": {
-        "id": "yatcGRBTg-W9"
+        "id": "YOo35TubiR_k"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Import Libraries\n"
+      ],
+      "metadata": {
+        "id": "FVvtfKTriith"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "\n",
+        "pd.set_option(\"display.max_columns\", None)\n",
+        "\n",
+        "print(\"Libraries imported successfully.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "sthL0C_tin63",
+        "outputId": "16ea5142-fd4b-481a-8d27-a4e57e913ab2"
       },
-      "outputs": [],
-      "source": []
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Libraries imported successfully.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Loading the Dataset\n",
+        "\n",
+        "The dengue forecasting dataset consists of environmental measurements and weekly dengue case counts.\n",
+        "\n",
+        "The environmental variables include rainfall, humidity, temperature, and vegetation indices that may influence disease transmission dynamics.\n"
+      ],
+      "metadata": {
+        "id": "pjSpCphduB0I"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "features = pd.read_csv(\n",
+        "    \"/content/dengue_labels_train.csv\"\n",
+        ")\n",
+        "\n",
+        "labels = pd.read_csv(\n",
+        "    \"/content/dengue_labels_train.csv\"\n",
+        ")\n",
+        "\n",
+        "print(\"Features Shape:\", features.shape)\n",
+        "print(\"Labels Shape:\", labels.shape)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "qdbFBdOxuGFb",
+        "outputId": "1c2030ad-9ce9-458d-d0d6-675258ee60d6"
+      },
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Features Shape: (1456, 4)\n",
+            "Labels Shape: (1456, 4)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Inspecting the Data Structure\n",
+        "\n",
+        "Before merging the datasets, it is important to understand the available variables and verify that the datasets contain the expected observations.\n"
+      ],
+      "metadata": {
+        "id": "KxwwUfqB_wh8"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "features.head()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "iR8uguMu_ztW",
+        "outputId": "1c058cea-ec08-4631-b9b7-6c382a3f049b"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "  city  year  weekofyear  total_cases\n",
+              "0   sj  1990          18            4\n",
+              "1   sj  1990          19            5\n",
+              "2   sj  1990          20            4\n",
+              "3   sj  1990          21            3\n",
+              "4   sj  1990          22            6"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-e092e708-cfab-4206-9fd3-bd68dbb76a06\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>city</th>\n",
+              "      <th>year</th>\n",
+              "      <th>weekofyear</th>\n",
+              "      <th>total_cases</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>18</td>\n",
+              "      <td>4</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>19</td>\n",
+              "      <td>5</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>20</td>\n",
+              "      <td>4</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>21</td>\n",
+              "      <td>3</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>22</td>\n",
+              "      <td>6</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-e092e708-cfab-4206-9fd3-bd68dbb76a06')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-e092e708-cfab-4206-9fd3-bd68dbb76a06 button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-e092e708-cfab-4206-9fd3-bd68dbb76a06');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "variable_name": "features",
+              "summary": "{\n  \"name\": \"features\",\n  \"rows\": 1456,\n  \"fields\": [\n    {\n      \"column\": \"city\",\n      \"properties\": {\n        \"dtype\": \"category\",\n        \"num_unique_values\": 2,\n        \"samples\": [\n          \"iq\",\n          \"sj\"\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"year\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 5,\n        \"min\": 1990,\n        \"max\": 2010,\n        \"num_unique_values\": 21,\n        \"samples\": [\n          1990,\n          2007\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"weekofyear\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 15,\n        \"min\": 1,\n        \"max\": 53,\n        \"num_unique_values\": 53,\n        \"samples\": [\n          37,\n          7\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"total_cases\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 43,\n        \"min\": 0,\n        \"max\": 461,\n        \"num_unique_values\": 135,\n        \"samples\": [\n          154,\n          67\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {},
+          "execution_count": 5
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "labels.head()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "bbjTrX6wuOPC",
+        "outputId": "1e86f57e-0724-4d58-a958-993fc611c571"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "  city  year  weekofyear  total_cases\n",
+              "0   sj  1990          18            4\n",
+              "1   sj  1990          19            5\n",
+              "2   sj  1990          20            4\n",
+              "3   sj  1990          21            3\n",
+              "4   sj  1990          22            6"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-f5cc9c9a-0f93-473b-92cb-4801ac0a2339\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>city</th>\n",
+              "      <th>year</th>\n",
+              "      <th>weekofyear</th>\n",
+              "      <th>total_cases</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>18</td>\n",
+              "      <td>4</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>19</td>\n",
+              "      <td>5</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>20</td>\n",
+              "      <td>4</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>21</td>\n",
+              "      <td>3</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>22</td>\n",
+              "      <td>6</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-f5cc9c9a-0f93-473b-92cb-4801ac0a2339')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-f5cc9c9a-0f93-473b-92cb-4801ac0a2339 button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-f5cc9c9a-0f93-473b-92cb-4801ac0a2339');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "variable_name": "labels",
+              "summary": "{\n  \"name\": \"labels\",\n  \"rows\": 1456,\n  \"fields\": [\n    {\n      \"column\": \"city\",\n      \"properties\": {\n        \"dtype\": \"category\",\n        \"num_unique_values\": 2,\n        \"samples\": [\n          \"iq\",\n          \"sj\"\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"year\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 5,\n        \"min\": 1990,\n        \"max\": 2010,\n        \"num_unique_values\": 21,\n        \"samples\": [\n          1990,\n          2007\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"weekofyear\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 15,\n        \"min\": 1,\n        \"max\": 53,\n        \"num_unique_values\": 53,\n        \"samples\": [\n          37,\n          7\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"total_cases\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 43,\n        \"min\": 0,\n        \"max\": 461,\n        \"num_unique_values\": 135,\n        \"samples\": [\n          154,\n          67\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {},
+          "execution_count": 6
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Dataset Integration\n",
+        "\n",
+        "The environmental features and dengue case counts are merged using the common identifiers:\n",
+        "\n",
+        "* City\n",
+        "* Year\n",
+        "* Epidemiological Week\n",
+        "\n",
+        "This creates a single dataset for analysis.\n"
+      ],
+      "metadata": {
+        "id": "F4lvH_nh_5xn"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dengue_df = pd.merge(\n",
+        "    features,\n",
+        "    labels,\n",
+        "    on=[\n",
+        "        \"city\",\n",
+        "        \"year\",\n",
+        "        \"weekofyear\"\n",
+        "    ]\n",
+        ")\n",
+        "\n",
+        "dengue_df.head()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "5bvBRHhM_8dl",
+        "outputId": "50f8dcbf-85a8-4557-bf5c-aeca4a84f35d"
+      },
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "  city  year  weekofyear  total_cases_x  total_cases_y\n",
+              "0   sj  1990          18              4              4\n",
+              "1   sj  1990          19              5              5\n",
+              "2   sj  1990          20              4              4\n",
+              "3   sj  1990          21              3              3\n",
+              "4   sj  1990          22              6              6"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-4068411a-5db9-4fda-bba3-60ce636c1e76\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>city</th>\n",
+              "      <th>year</th>\n",
+              "      <th>weekofyear</th>\n",
+              "      <th>total_cases_x</th>\n",
+              "      <th>total_cases_y</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>18</td>\n",
+              "      <td>4</td>\n",
+              "      <td>4</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>19</td>\n",
+              "      <td>5</td>\n",
+              "      <td>5</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>20</td>\n",
+              "      <td>4</td>\n",
+              "      <td>4</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>21</td>\n",
+              "      <td>3</td>\n",
+              "      <td>3</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>sj</td>\n",
+              "      <td>1990</td>\n",
+              "      <td>22</td>\n",
+              "      <td>6</td>\n",
+              "      <td>6</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-4068411a-5db9-4fda-bba3-60ce636c1e76')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-4068411a-5db9-4fda-bba3-60ce636c1e76 button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-4068411a-5db9-4fda-bba3-60ce636c1e76');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "variable_name": "dengue_df",
+              "summary": "{\n  \"name\": \"dengue_df\",\n  \"rows\": 1456,\n  \"fields\": [\n    {\n      \"column\": \"city\",\n      \"properties\": {\n        \"dtype\": \"category\",\n        \"num_unique_values\": 2,\n        \"samples\": [\n          \"iq\",\n          \"sj\"\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"year\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 5,\n        \"min\": 1990,\n        \"max\": 2010,\n        \"num_unique_values\": 21,\n        \"samples\": [\n          1990,\n          2007\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"weekofyear\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 15,\n        \"min\": 1,\n        \"max\": 53,\n        \"num_unique_values\": 53,\n        \"samples\": [\n          37,\n          7\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"total_cases_x\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 43,\n        \"min\": 0,\n        \"max\": 461,\n        \"num_unique_values\": 135,\n        \"samples\": [\n          154,\n          67\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"total_cases_y\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 43,\n        \"min\": 0,\n        \"max\": 461,\n        \"num_unique_values\": 135,\n        \"samples\": [\n          154,\n          67\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {},
+          "execution_count": 7
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(\n",
+        "    \"Merged Dataset Shape:\",\n",
+        "    dengue_df.shape\n",
+        ")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "wcmtRny2_25m",
+        "outputId": "07745bd2-ca20-40e5-eb7f-5fe03569b430"
+      },
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Merged Dataset Shape: (1456, 5)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Data Quality Assessment\n",
+        "\n",
+        "Missing values are common in epidemiological and environmental surveillance systems.\n",
+        "\n",
+        "Understanding the extent of missingness helps guide preprocessing decisions in later stages of the project.\n"
+      ],
+      "metadata": {
+        "id": "60h2RvuWABco"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "missing_values = (\n",
+        "    dengue_df.isnull()\n",
+        "    .sum()\n",
+        "    .sort_values(\n",
+        "        ascending=False\n",
+        "    )\n",
+        ")\n",
+        "\n",
+        "missing_values[\n",
+        "    missing_values > 0\n",
+        "]"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 84
+        },
+        "id": "Y8U0Gk9k_--l",
+        "outputId": "cd7de9ed-7ba8-4a4b-d1e4-5ecd22e6123f"
+      },
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "Series([], dtype: int64)"
+            ],
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>0</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div><br><label><b>dtype:</b> int64</label>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 9
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dengue_df.info()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "0bCd0K6YAEul",
+        "outputId": "7e64f064-2aa5-45ed-aa3d-49e13502cc97"
+      },
+      "execution_count": 10,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 1456 entries, 0 to 1455\n",
+            "Data columns (total 5 columns):\n",
+            " #   Column         Non-Null Count  Dtype \n",
+            "---  ------         --------------  ----- \n",
+            " 0   city           1456 non-null   object\n",
+            " 1   year           1456 non-null   int64 \n",
+            " 2   weekofyear     1456 non-null   int64 \n",
+            " 3   total_cases_x  1456 non-null   int64 \n",
+            " 4   total_cases_y  1456 non-null   int64 \n",
+            "dtypes: int64(4), object(1)\n",
+            "memory usage: 57.0+ KB\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Initial Observations\n",
+        "\n",
+        "The integrated dataset combines disease incidence information with environmental factors that may influence dengue transmission.\n",
+        "\n",
+        "The next stage of the project will focus on exploratory time series analysis to understand disease trends, seasonality, and geographic differences between cities.\n"
+      ],
+      "metadata": {
+        "id": "7eZ3xMUAALH0"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "OPfP8s1PAHp2"
+      },
+      "execution_count": null,
+      "outputs": []
     }
   ]
 }
