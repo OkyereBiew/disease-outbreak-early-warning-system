@@ -74,6 +74,54 @@ Key variables include:
 
 🔄 Data Collection and Integration In Progress
 
+## Results
+
+The Disease Outbreak Early Warning System successfully analyzed historical dengue surveillance data and generated actionable forecasting and outbreak detection insights.
+
+### Key Findings
+
+- The dengue incidence series was confirmed to be stationary using the Augmented Dickey-Fuller (ADF) test.
+- Missing environmental observations were successfully addressed through median-based imputation.
+- Exponential Smoothing and ARIMA forecasting models were evaluated and compared.
+- Exponential Smoothing achieved the best forecasting performance with an RMSE of approximately 28.57.
+- The outbreak detection framework identified 72 high-risk outbreak periods.
+- Approximately 6.9% of all observed weeks were classified as high-risk disease activity.
+
+### Forecasting Outcome
+
+The forecasting models successfully predicted future dengue incidence trends and provided an early indication of increasing disease activity.
+
+### Operational Impact
+
+The framework demonstrates how statistical forecasting and outbreak detection can support evidence-based public health decision making through automated risk monitoring and alert generation.
+
 ⏳ Exploratory Time Series Analysis Pending
 
 ⏳ Forecasting and Early Warning System Development Pending
+
+
+## Research Significance
+
+Disease forecasting and outbreak detection remain critical challenges in public health surveillance.
+
+This project demonstrates how statistical time series analysis, forecasting models, and automated alert systems can be combined to support proactive disease monitoring and evidence-based intervention planning.
+
+The framework provides a foundation for future research in epidemiological forecasting, health analytics, uncertainty quantification, and data-driven public health decision systems.
+
+## Visualizations
+### Distribution of Weekly Dengue Cases
+
+![Dengue Distribution](images/dengue_case_distribution.png)
+
+### Seasonal Disease Pattern
+
+![Seasonality](images/seasonality_pattern.png)
+
+### Forecast Model Comparison
+
+![Forecast Comparison](images/forecast_comparison.png)
+
+### Historical Outbreak Detection
+
+![Outbreak Detection](images/historical_outbreak_detection.png)
+
